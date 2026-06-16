@@ -258,6 +258,13 @@ button:active {
     transform: translateY(1px);
 }
 
+button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 .auth-form > button[type="submit"] {
     margin-top: 6px;
     padding: 14px;

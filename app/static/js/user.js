@@ -165,7 +165,11 @@ async function handleAddReading(event) {
         return;
     }
     const chosenDate = document.getElementById("reading-date").value;
-    const payloadDate = chosenDate ? new Date(chosenDate).toISOString() : null;
+    if (!isReadingDateValid(chosenDate)) {
+        showToast(READING_DATE_FUTURE_ERROR, "danger");
+        return;
+    }
+    const payloadDate = `${chosenDate}T12:00:00`;
     try {
         const response = await fetch(`${API_URL}/bills/meters/${meterId}/readings`, {
             method: "POST",
@@ -175,7 +179,10 @@ async function handleAddReading(event) {
                 recorded_at: payloadDate
             })
         });
-        if (!response.ok) throw new Error("Новое значение не может быть меньше предыдущего показания");
+        if (!response.ok) {
+            const errorBody = await response.json();
+            throw new Error(parseApiErrorDetail(errorBody.detail));
+        }
         showToast("Показание прибора зафиксировано");
         document.getElementById("reading-value").value = "";
         await loadReadingHistory();

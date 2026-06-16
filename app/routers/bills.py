@@ -1,11 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from typing import List
-from datetime import datetime
+from datetime import datetime, timezone
 from app.database import get_db
 from app.models.bills import ServiceType, Meter, MeterReading
 from app.models.users import User
-from app.schemas.bills import MeterCreate, MeterOut, MeterReadingCreate, MeterReadingOut, ServiceTypeOut
+from app.schemas.bills import (
+    MeterCreate,
+    MeterOut,
+    MeterReadingCreate,
+    MeterReadingOut,
+    READING_DATE_FUTURE_ERROR,
+    ServiceTypeOut,
+)
 from app.security import get_current_user
 
 router = APIRouter(prefix="/bills", tags=["Bills & Meters"])
@@ -56,7 +63,11 @@ def add_reading(meter_id: int, reading: MeterReadingCreate, db: Session = Depend
         consumed_volume = 0.0
 
     calculated_cost = consumed_volume * meter.current_tariff
-    reading_date = reading.recorded_at if reading.recorded_at else datetime.utcnow()
+    reading_date = reading.recorded_at if reading.recorded_at else datetime.now(timezone.utc)
+    if reading_date.tzinfo is None:
+        reading_date = reading_date.replace(tzinfo=timezone.utc)
+    if reading_date.date() > datetime.now(timezone.utc).date():
+        raise HTTPException(status_code=400, detail=READING_DATE_FUTURE_ERROR)
 
     new_reading = MeterReading(
         meter_id=meter_id,

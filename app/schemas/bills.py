@@ -1,5 +1,7 @@
-from pydantic import BaseModel
-from datetime import datetime
+from pydantic import BaseModel, field_validator
+from datetime import datetime, timezone
+
+READING_DATE_FUTURE_ERROR = "Некорректная дата: нельзя указывать дату в будущем"
 
 class ServiceTypeBase(BaseModel):
     name: str
@@ -32,6 +34,17 @@ class MeterOut(BaseModel):
 class MeterReadingCreate(BaseModel):
     reading_value: float
     recorded_at: datetime | None = None
+
+    @field_validator("recorded_at")
+    @classmethod
+    def recorded_at_not_in_future(cls, value: datetime | None) -> datetime | None:
+        if value is None:
+            return value
+        recorded = value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+        today_utc = datetime.now(timezone.utc).date()
+        if recorded.date() > today_utc:
+            raise ValueError(READING_DATE_FUTURE_ERROR)
+        return value
 
 class MeterReadingOut(BaseModel):
     id: int

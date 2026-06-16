@@ -6,7 +6,8 @@ async function initDashboard() {
 
     const dateInput = document.getElementById("reading-date");
     if (dateInput) {
-        dateInput.value = new Date().toISOString().split("T")[0];
+        dateInput.value = getTodayLocalDateString();
+        initReadingDateValidation();
     }
 
     if (isAdmin) {
@@ -25,4 +26,38 @@ async function initDashboard() {
         await loadMeters();
         await loadAnalyticsAndBudget();
     }
+}
+
+function initReadingDateValidation() {
+    const input = document.getElementById("reading-date");
+    const submitBtn = document.getElementById("reading-submit-btn");
+    const errorEl = document.getElementById("reading-date-error");
+    if (!input || !submitBtn) return;
+
+    input.max = getTodayLocalDateString();
+
+    const validateReadingDate = () => {
+        const value = input.value;
+        const valid = isReadingDateValid(value);
+
+        submitBtn.disabled = !valid;
+
+        if (!errorEl) return valid;
+
+        if (!valid && value) {
+            errorEl.hidden = false;
+            errorEl.textContent = READING_DATE_FUTURE_ERROR;
+            input.setAttribute("aria-invalid", "true");
+        } else {
+            errorEl.hidden = true;
+            errorEl.textContent = "";
+            input.removeAttribute("aria-invalid");
+        }
+
+        return valid;
+    };
+
+    input.addEventListener("input", validateReadingDate);
+    input.addEventListener("change", validateReadingDate);
+    validateReadingDate();
 }

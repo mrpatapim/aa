@@ -126,3 +126,28 @@ function pluralResidents(count) {
     if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "жильца";
     return "жильцов";
 }
+
+const READING_DATE_FUTURE_ERROR = "Некорректная дата: нельзя указывать дату в будущем";
+
+function getTodayLocalDateString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+function isReadingDateValid(dateValue) {
+    if (!dateValue) return false;
+    return dateValue <= getTodayLocalDateString();
+}
+
+function parseApiErrorDetail(detail) {
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail) && detail.length) {
+        const first = detail[0];
+        if (typeof first === "string") return first;
+        if (first && typeof first.msg === "string") return first.msg;
+    }
+    return "Ошибка выполнения запроса";
+}
