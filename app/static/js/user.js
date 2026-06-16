@@ -62,7 +62,7 @@ function populateJournalMeterFilter(meters) {
     if (!filter) return;
 
     const previousValue = filter.value || "all";
-    filter.innerHTML = '<option value="all">Все показания</option>';
+    filter.innerHTML = '<option value="all">Все приборы</option>';
     meters.forEach(meter => {
         const option = document.createElement("option");
         option.value = meter.id;
