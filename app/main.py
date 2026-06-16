@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.config import APP_NAME
+from app.middleware.page_auth import PageAuthMiddleware
 from app.routers import admin, analytics, auth, bills as bills_router, districts, forecast, pages
 from app.seed import seed_database
 
@@ -21,6 +22,8 @@ app = FastAPI(
     version="10.0.0",
     lifespan=lifespan,
 )
+
+app.add_middleware(PageAuthMiddleware)
 
 app.include_router(pages.router)
 app.include_router(auth.router)

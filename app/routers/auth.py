@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from app.config import attach_auth_cookie, clear_auth_cookie
 from app.database import get_db
 from app.models.users import User
 from app.schemas.users import UserCreate, UserOut, BudgetUpdate
@@ -10,7 +11,7 @@ from app.security import get_password_hash, verify_password, create_access_token
 router = APIRouter(tags=["Authentication"])
 
 @router.post("/register")
-def register_user(user: UserCreate, db: Session = Depends(get_db)):
+def register_user(user: UserCreate, response: Response, db: Session = Depends(get_db)):
     db_user_email = db.query(User).filter(User.email == user.email).first()
     if db_user_email:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -48,6 +49,7 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
     
     access_token = create_access_token(data={"sub": new_user.username})
+    attach_auth_cookie(response, access_token)
     return {
         "access_token": access_token, 
         "token_type": "bearer",
@@ -55,7 +57,7 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     }
 
 @router.post("/login")
-def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login_user(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
@@ -65,11 +67,17 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
         )
     
     access_token = create_access_token(data={"sub": user.username})
+    attach_auth_cookie(response, access_token)
     return {
         "access_token": access_token, 
         "token_type": "bearer",
         "is_admin": user.is_admin
     }
+
+@router.post("/logout")
+def logout_user(response: Response):
+    clear_auth_cookie(response)
+    return {"ok": True}
 
 @router.get("/users/me", response_model=UserOut)
 def read_users_me(current_user: User = Depends(get_current_user)):

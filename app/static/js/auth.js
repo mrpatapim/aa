@@ -26,6 +26,7 @@ async function handleRegister(event) {
         const response = await fetch(`${API_URL}/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({
                 username: document.getElementById("reg-username").value.trim(),
                 email: document.getElementById("reg-email").value.trim(),
@@ -64,6 +65,7 @@ async function handleLogin(event) {
         const response = await fetch(`${API_URL}/login`, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            credentials: "include",
             body: formData
         });
         if (!response.ok) throw new Error("Неверное имя пользователя или пароль");

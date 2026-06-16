@@ -1,4 +1,6 @@
 async function initDashboard() {
+    if (!(await ensureAuthenticated())) return;
+
     const isAdmin = localStorage.getItem("isAdmin") === "true";
     const roleBadge = document.getElementById("sidebar-role");
 

@@ -8,6 +8,26 @@ function authHeaders(json) {
     return headers;
 }
 
+async function ensureAuthenticated() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        window.location.replace("/");
+        return false;
+    }
+    try {
+        const response = await fetch(`${API_URL}/users/me`, {
+            headers: authHeaders(),
+            credentials: "include"
+        });
+        if (!response.ok) throw new Error("unauthorized");
+        return true;
+    } catch {
+        localStorage.clear();
+        window.location.replace("/");
+        return false;
+    }
+}
+
 function showToast(message, type = "success") {
     const container = document.getElementById("toast-container");
     if (!container) return;
@@ -89,7 +109,12 @@ function setText(id, value) {
     if (element) element.innerText = value;
 }
 
-function logout() {
+async function logout() {
+    try {
+        await fetch(`${API_URL}/logout`, { method: "POST", credentials: "include" });
+    } catch (error) {
+        void error;
+    }
     localStorage.clear();
     window.location.href = "/";
 }
