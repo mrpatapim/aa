@@ -1,0 +1,25 @@
+# Вариант, если проект временно остаётся в /root (только для отладки).
+# User=root, без ProtectHome — иначе 203/EXEC.
+# Для продакшена перенесите в /opt/utility-jkh и используйте utility-jkh.service
+
+[Unit]
+Description=Система учета ЖКХ (FastAPI) — /root
+After=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/root/utility-jkh
+EnvironmentFile=-/root/utility-jkh/.env
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=/root/utility-jkh
+ExecStart=/root/utility-jkh/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=utility-jkh
+
+[Install]
+WantedBy=multi-user.target

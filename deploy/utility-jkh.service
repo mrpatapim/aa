@@ -1,6 +1,5 @@
 [Unit]
 Description=Система учета ЖКХ (FastAPI)
-Documentation=https://github.com/
 After=network-online.target
 Wants=network-online.target
 
@@ -9,26 +8,18 @@ Type=simple
 User=www-data
 Group=www-data
 
+# НЕ размещайте проект в /root — www-data не имеет доступа.
+# Рекомендуемый путь: /opt/utility-jkh
 WorkingDirectory=/opt/utility-jkh
 EnvironmentFile=-/opt/utility-jkh/.env
 Environment=PYTHONUNBUFFERED=1
 Environment=PYTHONPATH=/opt/utility-jkh
 
 ExecStart=/opt/utility-jkh/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
-ExecReload=/bin/kill -HUP $MAINPID
 
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=30
-
-# SQLite — только один worker
-LimitNOFILE=65535
-
-NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=strict
-ProtectHome=true
-ReadWritePaths=/opt/utility-jkh
 
 StandardOutput=journal
 StandardError=journal

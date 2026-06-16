@@ -38,19 +38,69 @@ async function loadMeters() {
     const countBadge = document.getElementById("kpi-active-meters");
     if (countBadge) countBadge.innerText = meters.length;
 
-    const select = document.getElementById("reading-meter-id");
-    if (select) {
-        select.innerHTML = "";
+    const readingSelect = document.getElementById("reading-meter-id");
+    if (readingSelect) {
+        const selectedMeterId = readingSelect.value;
+        readingSelect.innerHTML = "";
         meters.forEach(meter => {
             const option = document.createElement("option");
             option.value = meter.id;
             option.textContent = `Прибор №${meter.serial_number}`;
-            select.appendChild(option);
+            readingSelect.appendChild(option);
         });
-        loadReadingHistory();
+        if (selectedMeterId && meters.some(m => String(m.id) === selectedMeterId)) {
+            readingSelect.value = selectedMeterId;
+        }
     }
 
+    populateJournalMeterFilter(meters);
     checkSmartAlerts(meters);
+}
+
+function populateJournalMeterFilter(meters) {
+    const filter = document.getElementById("journal-meter-filter");
+    if (!filter) return;
+
+    const previousValue = filter.value || "all";
+    filter.innerHTML = '<option value="all">Все показания</option>';
+    meters.forEach(meter => {
+        const option = document.createElement("option");
+        option.value = meter.id;
+        option.textContent = `Прибор №${meter.serial_number}`;
+        filter.appendChild(option);
+    });
+
+    const hasPrevious = previousValue === "all" || meters.some(m => String(m.id) === previousValue);
+    filter.value = hasPrevious ? previousValue : "all";
+    loadReadingHistory();
+}
+
+function renderReadingHistoryRows(readings, listDiv) {
+    listDiv.innerHTML = "";
+    if (readings.length === 0) {
+        listDiv.innerHTML = `<p class="empty-note">Показания не найдены.</p>`;
+        return;
+    }
+
+    readings.forEach(reading => {
+        const date = new Date(reading.recorded_at).toLocaleDateString("ru-RU");
+        const row = document.createElement("div");
+        row.className = "list-row";
+        row.innerHTML = `
+            <div>
+                <div class="row-title">${escapeHtml(reading.service_name)} [№${escapeHtml(reading.serial_number)}]</div>
+                <div class="row-accent">Показание: ${reading.reading_value} ${escapeHtml(reading.unit)}</div>
+                <div class="row-meta">Дата: ${date} · Начислено: ${formatMoney(reading.calculated_cost)}</div>
+            </div>
+            <button class="btn-danger btn-mini" onclick="deleteReading(${reading.id})">Удалить</button>`;
+        listDiv.appendChild(row);
+    });
+}
+
+async function fetchMeterReadings(meterId) {
+    const response = await fetch(`${API_URL}/bills/meters/${meterId}/readings`, { headers: authHeaders() });
+    if (!response.ok) return [];
+    return response.json();
 }
 
 async function checkSmartAlerts(meters) {
@@ -137,33 +187,27 @@ async function handleAddReading(event) {
 }
 
 async function loadReadingHistory() {
-    const meterId = document.getElementById("reading-meter-id").value;
+    const filterEl = document.getElementById("journal-meter-filter");
     const listDiv = document.getElementById("readings-history-list");
     if (!listDiv) return;
-    listDiv.innerHTML = "";
-    if (!meterId) return;
 
-    const response = await fetch(`${API_URL}/bills/meters/${meterId}/readings`, { headers: authHeaders() });
-    const readings = await response.json();
+    const filterValue = filterEl ? filterEl.value : "all";
+    let readings = [];
 
-    if (readings.length === 0) {
-        listDiv.innerHTML = `<p class="empty-note">По данному прибору пока нет внесенных показаний.</p>`;
-        return;
+    if (filterValue === "all") {
+        const metersResponse = await fetch(`${API_URL}/bills/meters`, { headers: authHeaders() });
+        const meters = await metersResponse.json();
+        for (const meter of meters) {
+            const meterReadings = await fetchMeterReadings(meter.id);
+            readings.push(...meterReadings);
+        }
+        readings.sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at));
+    } else {
+        const meterReadings = await fetchMeterReadings(filterValue);
+        readings = meterReadings.slice().reverse();
     }
 
-    readings.slice().reverse().forEach(reading => {
-        const date = new Date(reading.recorded_at).toLocaleDateString("ru-RU");
-        const row = document.createElement("div");
-        row.className = "list-row";
-        row.innerHTML = `
-            <div>
-                <div class="row-title">${escapeHtml(reading.service_name)} [№${escapeHtml(reading.serial_number)}]</div>
-                <div class="row-accent">Показание: ${reading.reading_value} ${escapeHtml(reading.unit)}</div>
-                <div class="row-meta">Дата: ${date} · Начислено: ${formatMoney(reading.calculated_cost)}</div>
-            </div>
-            <button class="btn-danger btn-mini" onclick="deleteReading(${reading.id})">Удалить</button>`;
-        listDiv.appendChild(row);
-    });
+    renderReadingHistoryRows(readings, listDiv);
 }
 
 async function deleteReading(readingId) {

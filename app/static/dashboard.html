@@ -111,7 +111,7 @@
                             <form onsubmit="handleAddReading(event)">
                                 <div class="input-group">
                                     <label>Выберите счетчик</label>
-                                    <select id="reading-meter-id" onchange="loadReadingHistory()" required></select>
+                                    <select id="reading-meter-id" required></select>
                                 </div>
                                 <div class="input-group">
                                     <label>Дата снятия показания</label>
@@ -128,7 +128,13 @@
                     <div>
                         <div class="card">
                             <h3>Журнал фиксации и удаление ошибок</h3>
-                            <div id="readings-history-list" class="item-list" style="max-height: 560px; overflow-y: auto;"></div>
+                            <div class="input-group" style="margin-bottom: 1rem;">
+                                <label>Фильтр по счётчику</label>
+                                <select id="journal-meter-filter" onchange="loadReadingHistory()">
+                                    <option value="all">Все показания</option>
+                                </select>
+                            </div>
+                            <div id="readings-history-list" class="item-list" style="max-height: 520px; overflow-y: auto;"></div>
                         </div>
                     </div>
                 </div>
@@ -221,7 +227,7 @@
     </div>
     <div id="toast-container" class="toast-container"></div>
     <script src="/static/js/core.js?v=18.1"></script>
-    <script src="/static/js/user.js?v=18.1"></script>
+    <script src="/static/js/user.js?v=18.2"></script>
     <script src="/static/js/admin.js?v=18.1"></script>
     <script src="/static/js/map.js?v=18.1"></script>
     <script src="/static/js/dashboard.js?v=18.1"></script>
