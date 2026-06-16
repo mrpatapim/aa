@@ -89,6 +89,40 @@ function switchView(viewId) {
     if (targetView) targetView.classList.add("active");
     const triggeredBtn = document.querySelector(`[onclick="switchView('${viewId}')"]`);
     if (triggeredBtn) triggeredBtn.classList.add("active");
+    updateMobileTopbarTitle(viewId);
+    closeMobileNav();
+}
+
+const MOBILE_VIEW_TITLES = {
+    "view-dashboard": "Обзор кабинета",
+    "view-meters": "Приборы учета",
+    "view-forecast": "Прогнозирование",
+    "view-admin": "Управление системой"
+};
+
+function updateMobileTopbarTitle(viewId) {
+    const titleEl = document.getElementById("mobile-topbar-title");
+    if (!titleEl) return;
+    titleEl.textContent = MOBILE_VIEW_TITLES[viewId] || "Система ЖКХ";
+}
+
+function toggleMobileNav() {
+    const layout = document.getElementById("app-layout");
+    const menuBtn = document.getElementById("mobile-menu-btn");
+    if (!layout) return;
+    const willOpen = !layout.classList.contains("nav-open");
+    layout.classList.toggle("nav-open", willOpen);
+    document.body.classList.toggle("nav-locked", willOpen);
+    if (menuBtn) menuBtn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+}
+
+function closeMobileNav() {
+    const layout = document.getElementById("app-layout");
+    const menuBtn = document.getElementById("mobile-menu-btn");
+    if (!layout) return;
+    layout.classList.remove("nav-open");
+    document.body.classList.remove("nav-locked");
+    if (menuBtn) menuBtn.setAttribute("aria-expanded", "false");
 }
 
 function downloadCSV(csvContent, filename) {

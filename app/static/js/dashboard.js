@@ -25,7 +25,12 @@ async function initDashboard() {
         await loadServiceTypes();
         await loadMeters();
         await loadAnalyticsAndBudget();
+        updateMobileTopbarTitle("view-dashboard");
     }
+
+    window.addEventListener("resize", () => {
+        if (window.innerWidth > 768) closeMobileNav();
+    });
 }
 
 function initReadingDateValidation() {

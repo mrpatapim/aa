@@ -3,13 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b1f4d">
     <title>Личный кабинет — Учет ЖКХ</title>
-    <link rel="stylesheet" href="/static/style.css?v=18.1">
+    <link rel="stylesheet" href="/static/style.css?v=19.0">
     <script src="/static/vendor/chart.umd.min.js?v=11.0"></script>
 </head>
 <body>
-    <div class="layout">
-        <div class="sidebar">
+    <header class="mobile-topbar">
+        <button type="button" class="mobile-menu-btn" onclick="toggleMobileNav()" aria-label="Открыть меню" aria-expanded="false" id="mobile-menu-btn">☰</button>
+        <span class="mobile-topbar-title" id="mobile-topbar-title">Система ЖКХ</span>
+    </header>
+    <div class="sidebar-backdrop" onclick="closeMobileNav()" aria-hidden="true"></div>
+    <div class="layout" id="app-layout">
+        <aside class="sidebar" id="app-sidebar">
             <div class="brand-block">
                 <div class="brand-title"><span class="brand-mark">⌂</span> Система ЖКХ</div>
                 <div id="sidebar-role" class="sidebar-role"></div>
@@ -23,8 +29,8 @@
                     <button class="menu-item active" onclick="switchView('view-admin')">Контроль базы данных</button>
                 </div>
             </div>
-            <button class="btn-danger" style="width:100%;" onclick="logout()">Выйти из профиля</button>
-        </div>
+            <button class="btn-danger sidebar-logout" onclick="logout()">Выйти из профиля</button>
+        </aside>
 
         <div class="main-content">
             <div id="smart-alerts-zone"></div>
@@ -227,11 +233,11 @@
         </div>
     </div>
     <div id="toast-container" class="toast-container"></div>
-    <script src="/static/js/core.js?v=18.5"></script>
+    <script src="/static/js/core.js?v=19.0"></script>
     <script src="/static/js/user.js?v=18.5"></script>
     <script src="/static/js/admin.js?v=18.1"></script>
     <script src="/static/js/map.js?v=18.1"></script>
-    <script src="/static/js/dashboard.js?v=18.5"></script>
+    <script src="/static/js/dashboard.js?v=19.0"></script>
     <script>initDashboard();</script>
 </body>
 </html>
