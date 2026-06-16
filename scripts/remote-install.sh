@@ -3,6 +3,7 @@
 set -euo pipefail
 
 APP_DIR="${1:-$(cd "$(dirname "$0")/.." && pwd)}"
+APP_DIR="${APP_DIR%$'\r'}"
 SERVICE_NAME="${DEPLOY_SERVICE:-utility-jkh}"
 PYTHON="${PYTHON:-python3}"
 

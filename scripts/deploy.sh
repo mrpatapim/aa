@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Деплой на удалённый Linux-сервер (bash / Git Bash / WSL).
+# Деплой на удалённый Linux-сервер. Запуск на Ubuntu:
+#   bash scripts/deploy.sh
+# НЕ запускайте deploy.ps1 — это скрипт только для Windows PowerShell.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -7,18 +9,40 @@ cd "$ROOT"
 
 ENV_FILE="$ROOT/.deploy.env"
 if [[ ! -f "$ENV_FILE" ]]; then
-  echo "Create .deploy.env from .deploy.env.example" >&2
+  echo "Создайте .deploy.env из .deploy.env.example" >&2
   exit 1
 fi
 
-# shellcheck disable=SC1090
-source "$ENV_FILE"
+# Загрузка .deploy.env (поддержка CRLF из Windows)
+load_deploy_env() {
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
+    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ "$line" != *=* ]] && continue
+    key="${line%%=*}"
+    val="${line#*=}"
+    key="${key#"${key%%[![:space:]]*}"}"
+    key="${key%"${key##*[![:space:]]}"}"
+    val="${val#"${val%%[![:space:]]*}"}"
+    val="${val%"${val##*[![:space:]]}"}"
+    export "$key=$val"
+  done < "$ENV_FILE"
+}
+load_deploy_env
 
-: "${DEPLOY_HOST:?DEPLOY_HOST required}"
-: "${DEPLOY_USER:?DEPLOY_USER required}"
+: "${DEPLOY_HOST:?DEPLOY_HOST required in .deploy.env}"
+: "${DEPLOY_USER:?DEPLOY_USER required in .deploy.env}"
 DEPLOY_PORT="${DEPLOY_PORT:-22}"
 DEPLOY_PATH="${DEPLOY_PATH:-/opt/utility-jkh}"
 DEPLOY_SERVICE="${DEPLOY_SERVICE:-utility-jkh}"
+
+# Деплой на localhost без SSH
+if [[ "$DEPLOY_HOST" == "localhost" || "$DEPLOY_HOST" == "127.0.0.1" ]]; then
+  echo "==> Local mode (DEPLOY_HOST=$DEPLOY_HOST)"
+  export DEPLOY_SERVICE
+  bash "$ROOT/scripts/remote-install.sh" "$DEPLOY_PATH"
+  exit 0
+fi
 
 SSH_OPTS=(-p "$DEPLOY_PORT" -o StrictHostKeyChecking=accept-new)
 [[ -n "${DEPLOY_SSH_KEY:-}" ]] && SSH_OPTS+=(-i "$DEPLOY_SSH_KEY")

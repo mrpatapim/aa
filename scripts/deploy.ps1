@@ -1,4 +1,5 @@
-# Деплой FastAPI-приложения на удалённый Linux-сервер (Windows PowerShell).
+# Деплой FastAPI-приложения на удалённый Linux-сервер (ТОЛЬКО Windows PowerShell).
+# На Ubuntu/Linux используйте: bash scripts/deploy.sh
 # Требуется OpenSSH Client (встроен в Windows 10/11).
 #
 # Использование:

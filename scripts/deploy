@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Точка входа: Linux/macOS/WSL -> deploy.sh, Windows PowerShell -> deploy.ps1
+set -euo pipefail
+DIR="$(cd "$(dirname "$0")" && pwd)"
+
+if [[ -n "${WINDIR:-}" ]] && command -v pwsh >/dev/null 2>&1; then
+  exec pwsh -File "$DIR/deploy.ps1" "$@"
+fi
+
+if [[ -n "${WINDIR:-}" ]] && command -v powershell >/dev/null 2>&1; then
+  exec powershell -NoProfile -File "$DIR/deploy.ps1" "$@"
+fi
+
+exec bash "$DIR/deploy.sh" "$@"
